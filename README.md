@@ -2,7 +2,7 @@
 
 - 安装  leaflet
 
-```
+``` js
   npm install leaflet --save
 
 ```
