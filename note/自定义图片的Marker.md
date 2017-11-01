@@ -36,3 +36,5 @@ var CustomerIcon = L.Icon.extend({
 ```
 
 > 点击地图的时候可以获取到经纬度，经纬度属性在  ev.latlng 属性上
+
+欢迎指正：[GitHub](https://github.com/zhaozhuoboy)
