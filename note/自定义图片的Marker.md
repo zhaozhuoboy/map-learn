@@ -21,3 +21,18 @@ var CustomerIcon = L.Icon.extend({
 > - shadowUrl   自定义阴影图片
 > - **iconAnchor**  主要是这个参数，它表示  图片的那个位置 对着 经纬度点，如果没有这个的话，你会发现 当你点击地图 添加一个marker的时候 ，图片的左上角是点击地图的位置。设置这个属性之后marker的  尖会对着 你点的位置。
 > - **shadowAnchor** 这个是阴影图片的偏移量，不设置会跟iconAnchor 一致
+
+### 2 有了自定义Icon，现在我们来创建一个 Marker
+
+```js
+    this.map.on('click',(ev)=>{
+      console.log(ev)
+      //e.latlng
+      let marker = new L.Marker(ev.latlng,{
+          icon:new CustomerIcon()
+      }).addTo(this.map)
+    })
+
+```
+
+> 点击地图的时候可以获取到经纬度，经纬度属性在  ev.latlng 属性上
