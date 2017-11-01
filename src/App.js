@@ -5,7 +5,8 @@ import axios from 'axios';
 import HeatmapOverlay from 'leaflet-heatmap';
 import 'leaflet-draw/dist/leaflet.draw.css'
 import './App.css';
-
+import markerIcon from './images/marker.png'
+import mkshadow from './images/shadow.png'
 
 
 let api = 'http://134.175.63.128:58900/common/queryGridByXY';
@@ -13,13 +14,23 @@ var CancelToken = axios.CancelToken;
 var source = CancelToken.source();
 let gridLayer = new L.layerGroup();
 let circleLayer = new L.layerGroup();
+var timer = null;
 class App extends Component {
   constructor(){
     super()
     this.map=null;
     this.heatmapLayer=null;
     this.prevlatlng=null;
+    this.staticLang=null;
     
+  }
+  sendRequest=(bounds)=>{
+    if(timer){
+      clearTimeout(timer)
+    }
+    timer = setTimeout(()=>{
+      console.log('发起请求..')
+    },800)
   }
   componentDidMount(){
     this.initMap();
@@ -28,8 +39,14 @@ class App extends Component {
       color: "red",
        weight: 1,
        radius: 20
-    }).addTo(circleLayer).bindPopup('我是圆');
-    let grid = L.polygon(returnGrid(data[0][3],data[0][4])).addTo(gridLayer).bindPopup('我是方块');
+    });
+    let grid = L.polygon(returnGrid(data[0][3],data[0][4]));
+    L.featureGroup([circle,grid])
+    .bindPopup(`<button>adfssad</button>`)
+    .on('click', function(e) {
+
+    })
+    .addTo(this.map);
     // this.map.on('click',(e)=>{
     //   console.log(e.latlng)
     //   var random = Math.floor(Math.random()*100+1);
@@ -40,8 +57,6 @@ class App extends Component {
     //   this.heatmapLayer.addData(data);
     // })
     this.map.setView([25.792628,113.032208])
-    // var point = L.point(55.541064956111036, -4.702148437500001);
-
     var testData = {
       min: 0,
       max: 100,
@@ -54,43 +69,63 @@ class App extends Component {
     this.map.on('dragstart',(ev)=>{
       // source.cancel('停止上一次请求');
       this.prevlatlng = this.map.getBounds();
+      this.staticLang = Math.abs(this.prevlatlng._northEast.lat-this.prevlatlng._southWest.lat);
+      console.log('--->',this.staticLang)
     })
+    this.map.on('click',(ev)=>{
+      console.log(ev)
+      //e.latlng
+      //自定义marker图片
+      let marker = new L.Marker(ev.latlng,{
+          icon:new L.icon({
+            iconUrl: markerIcon,
+            shadowUrl: mkshadow,
+            iconSize: [15, 26],
+            shadowSize:[11, 3],
+            iconAnchor: [7, 26],
+            shadowAnchor: [5, 2],
+          })
+      }).addTo(this.map)
+    })
+    //拖拽结束事件
     this.map.on('dragend',(ev)=>{
-      
+      const nextLatLng = this.map.getBounds();
       // let zoom = this.map.getZoom();113.023024 25.796699999999998", "113.02352 25.79715
       //getBounds  获取地图边界  数据是 latlngBounds 对象
       // 使用 latLng 方法将经纬度转换成  latLng点对象
       // contains 方法 返回  点，或者矩形是否在  地图边界内
-      let Bounds=this.map.getBounds();
+      // let Bounds=this.map.getBounds();
       let a= L.latLng(25.796699999999998,113.023024);
       let b = L.latLng(25.79715,113.02352)
-      console.log(Bounds.contains(L.latLngBounds(a,b)))
+      // console.log(Bounds.contains(L.latLngBounds(a,b)))
       // console.log('拖动之前-->',this.prevlatlng)
       // console.log('拖动之后--->',Bounds)
-      let obj = {
-          leftlog:Bounds._southWest.lng,
-          leftlat:Bounds._southWest.lat,
-          rightlog:Bounds._northEast.lng,
-          rightlat:Bounds._northEast.lat,
-          FREQ_DL:'1.8G',
-          kpi:'rsrp'
-      }
-      axios.post(api+`/20171004`,obj,{
-        cancelToken: source.token
-      })
-      .then(res=>{
-        console.log(res.data)
-      })
-      .catch(function(thrown) {
-        if (axios.isCancel(thrown)) {
-          console.log('Request canceled', thrown.message);
-        } else {
-          // 处理错误
-        }
-      })
+      // let obj = {
+      //     leftlog:Bounds._southWest.lng,
+      //     leftlat:Bounds._southWest.lat,
+      //     rightlog:Bounds._northEast.lng,
+      //     rightlat:Bounds._northEast.lat,
+      //     FREQ_DL:'1.8G',
+      //     kpi:'rsrp'
+      // }
+      // this.sendRequest(Bounds)
+      // axios.post(api+`/20171004`,obj,{
+      //   cancelToken: source.token
+      // })
+      // .then(res=>{
+      //   console.log(res.data)
+      // })
+      // .catch(function(thrown) {
+      //   if (axios.isCancel(thrown)) {
+      //     console.log('Request canceled', thrown.message);
+      //   } else {
+      //     // 处理错误
+      //   }
+      // })
       
     })
   }
+  
   initMap(){
     //热力图配置项
     var cfg = {
@@ -121,7 +156,12 @@ class App extends Component {
       }
     };
     this.heatmapLayer = new HeatmapOverlay(cfg);
-    this.map = L.map('map',{drawControl: true,layers: [this.heatmapLayer,circleLayer,gridLayer]}).setView([37.92388861359015,115.22048950195312], 16);
+    const mapOption ={
+      renderer: L.canvas(),
+      drawControl: true,
+      layers: [this.heatmapLayer,circleLayer,gridLayer]
+    }
+    this.map = L.map('map',mapOption).setView([37.92388861359015,115.22048950195312], 16);
     L.tileLayer('https://api.mapbox.com/styles/v1/zhaozhuodev/cj6x6z0799sbk2so4ggx2rqhb/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoiemhhb3podW9kZXYiLCJhIjoiY2o2d3g2NWI3MWtndzJ3cGRrbWc1MjQ4diJ9.SCM25AWgFuLBKdqSi3XFag', {
       maxZoom: 18,
       attribution: '&copy; <a href="http://github.com/zhaozhuoboy">zhaozhuodev</a>',
@@ -136,6 +176,18 @@ class App extends Component {
   click1=()=>{
     this.map.addLayer(circleLayer)
   }
+  click2=()=>{
+    // this.map.addLayer(circleLayer)
+    let grid = L.polygon(returnGrid(data[0][3],data[0][4])).bindPopup('我是方块');
+    // gridLayer.addLayer(grid)
+    console.log(grid._leaflet_id)
+    if(gridLayer.hasLayer(grid._leaflet_id)){
+      alert(1)
+    }else{
+      gridLayer.addLayer(grid)
+    }
+    
+  }
   render() {
     return (
       <div>
@@ -145,6 +197,8 @@ class App extends Component {
     bottom: 10}} onClick={this.click}>删除圆</button>
         <button style={{position: 'absolute',
       bottom: 10,left:100}} onClick={this.click1}>添加圆</button>
+      <button style={{position: 'absolute',
+      bottom: 10,left:170}} onClick={this.click2}>添加栅格</button>
       </div>
       
       
