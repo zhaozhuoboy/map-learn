@@ -12,6 +12,3 @@
 ``` html 
 <div id='map'></div>
 ```
-
-
-1
