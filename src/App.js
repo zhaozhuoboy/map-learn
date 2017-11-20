@@ -19,9 +19,10 @@ class App extends Component {
   constructor(){
     super()
     this.map=null;
-    this.heatmapLayer=null;
     this.prevlatlng=null;
-    this.staticLang=null;
+	this.staticLang=null;
+	this.DrawPolygon=false;
+	this.areaSelect=null;
     
   }
   sendRequest=(bounds)=>{
@@ -65,28 +66,44 @@ class App extends Component {
         {lat: 37.95502661288625, lng: 113.78814697265626,count:40},
       ]
     };
-    this.heatmapLayer.setData(testData);
     this.map.on('dragstart',(ev)=>{
       // source.cancel('停止上一次请求');
       this.prevlatlng = this.map.getBounds();
       this.staticLang = Math.abs(this.prevlatlng._northEast.lat-this.prevlatlng._southWest.lat);
       console.log('--->',this.staticLang)
-    })
-    this.map.on('click',(ev)=>{
-      console.log(ev)
-      //e.latlng
-      //自定义marker图片
-      let marker = new L.Marker(ev.latlng,{
-          icon:new L.icon({
-            iconUrl: markerIcon,
-            shadowUrl: mkshadow,
-            iconSize: [15, 26],
-            shadowSize:[11, 3],
-            iconAnchor: [7, 26],
-            shadowAnchor: [5, 2],
-          })
-      }).addTo(this.map)
-    })
+	})
+	//area select function
+	let arr = [];
+	this.map.on('click', (ev) => {
+		  if (this.DrawPolygon) {
+			  //把点的坐标记录下来
+			  arr.push(ev.latlng);
+			  let line = L.polyline(arr).addTo(this.map);
+			  //e.latlng
+			  //自定义marker图片
+			  let marker = new L.Marker(ev.latlng, {
+				  icon: new L.icon({
+					  iconUrl: markerIcon,
+					  shadowUrl: mkshadow,
+					  iconSize: [15, 26],
+					  shadowSize: [11, 3],
+					  iconAnchor: [7, 26],
+					  shadowAnchor: [5, 2],
+				  })
+			  }).addTo(this.map)
+			  marker.on('click', (ev) => {
+				  console.log(ev)
+				  this.DrawPolygon = false;
+				  arr.push(ev.latlng);
+				  this.areaSelect = L.polygon(arr).addTo(this.map);
+				  arr = [];
+				  this.areaSelect.on('click', (ev) => {
+					  console.log('area--->', ev)
+					  console.log(this.areaSelect.toGeoJSON())
+				  })
+			  })
+		  }
+	  })
     //拖拽结束事件
     this.map.on('dragend',(ev)=>{
       const nextLatLng = this.map.getBounds();
@@ -121,45 +138,16 @@ class App extends Component {
       //   } else {
       //     // 处理错误
       //   }
-      // })
+	  // })
       
     })
   }
   
   initMap(){
-    //热力图配置项
-    var cfg = {
-      // radius should be small ONLY if scaleRadius is true (or small radius is intended)
-      // if scaleRadius is false it will be the constant radius used in pixels
-      "radius":50,
-      "maxOpacity": .8, 
-      // scales the radius based on map zoom
-      "scaleRadius": false, 
-      // if set to false the heatmap uses the global maximum for colorization
-      // if activated: uses the data maximum within the current map boundaries 
-      //   (there will always be a red spot with useLocalExtremas true)
-      "useLocalExtrema": true,
-      // which field name in your data represents the latitude - default "lat"
-      latField: 'lat',
-      // which field name in your data represents the longitude - default "lng"
-      lngField: 'lng',
-      // which field name in your data represents the data value - default "value"
-      valueField: 'count',
-      blur: .65,
-      gradient: {
-        // enter n keys between 0 and 1 here
-        // for gradient color customization
-        '.5': 'red',
-        '.7': 'yellow',
-        '.8': 'blue',
-        '.95': 'green'
-      }
-    };
-    this.heatmapLayer = new HeatmapOverlay(cfg);
+   
     const mapOption ={
       renderer: L.canvas(),
-      drawControl: true,
-      layers: [this.heatmapLayer,circleLayer,gridLayer]
+      layers: [circleLayer,gridLayer]
     }
     this.map = L.map('map',mapOption).setView([37.92388861359015,115.22048950195312], 16);
     L.tileLayer('https://api.mapbox.com/styles/v1/zhaozhuodev/cj6x6z0799sbk2so4ggx2rqhb/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoiemhhb3podW9kZXYiLCJhIjoiY2o2d3g2NWI3MWtndzJ3cGRrbWc1MjQ4diJ9.SCM25AWgFuLBKdqSi3XFag', {
@@ -167,43 +155,50 @@ class App extends Component {
       attribution: '&copy; <a href="http://github.com/zhaozhuoboy">zhaozhuodev</a>',
       id: 'mapbox.streets'
     }).addTo(this.map);
-    var drawnItems = new L.FeatureGroup();
-    this.map.addLayer(drawnItems);
-  }
-  click=()=>{
-    this.map.removeLayer(circleLayer)
-  }
-  click1=()=>{
-    this.map.addLayer(circleLayer)
-  }
-  click2=()=>{
-    // this.map.addLayer(circleLayer)
-    let grid = L.polygon(returnGrid(data[0][3],data[0][4])).bindPopup('我是方块');
-    // gridLayer.addLayer(grid)
-    console.log(grid._leaflet_id)
-    if(gridLayer.hasLayer(grid._leaflet_id)){
-      alert(1)
-    }else{
-      gridLayer.addLayer(grid)
-    }
     
+    var drawnItems = new L.FeatureGroup();
+    // this.map.addLayer(drawnItems);
+    var drawControl = new L.Control.Draw({
+      draw: {
+        polyline:{
+          metric:true,
+          repeatMode:false,
+          shapeOptions:{
+            color: '#000',
+            weight: 10,
+          }
+        }
+        
+      },
+      polygon:false,
+      rectangle:false,
+      circle:false,
+      edit: {
+        featureGroup: drawnItems
+      }
+    });
+    this.map.addControl(drawControl);
+    
+
   }
-  render() {
-    return (
-      <div>
-          <div className="App" id='map'>
-          </div>
-        <button style={{position: 'absolute',
-    bottom: 10}} onClick={this.click}>删除圆</button>
-        <button style={{position: 'absolute',
-      bottom: 10,left:100}} onClick={this.click1}>添加圆</button>
-      <button style={{position: 'absolute',
-      bottom: 10,left:170}} onClick={this.click2}>添加栅格</button>
-      </div>
-      
-      
-    );
-  }
+	  
+  	click=()=>{
+		this.DrawPolygon = !this.DrawPolygon;
+		alert(this.DrawPolygon)
+		
+	}
+  
+	render() {
+		return (
+		<div>
+				<div className="App" id='map'>
+				</div>
+				<button style={{position: 'absolute',bottom: 10}} onClick={this.click}>
+					画区域
+				</button>
+		</div>
+		);
+	}
 }
 
 export default App;
