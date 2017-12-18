@@ -11,7 +11,6 @@ import mkshadow from './images/shadow.png'
 
 let api = 'http://134.175.63.128:58900/common/queryGridByXY';
 var CancelToken = axios.CancelToken;
-var source = CancelToken.source();
 let gridLayer = new L.layerGroup();
 let circleLayer = new L.layerGroup();
 var timer = null;
@@ -58,16 +57,8 @@ class App extends Component {
     //   this.heatmapLayer.addData(data);
     // })
     this.map.setView([25.792628,113.032208])
-    var testData = {
-      min: 0,
-      max: 100,
-      data: [
-        {lat: 38.058719000807145, lng:114.48434114456178,count:80},
-        {lat: 37.95502661288625, lng: 113.78814697265626,count:40},
-      ]
-    };
+   
     this.map.on('dragstart',(ev)=>{
-      // source.cancel('停止上一次请求');
       this.prevlatlng = this.map.getBounds();
       this.staticLang = Math.abs(this.prevlatlng._northEast.lat-this.prevlatlng._southWest.lat);
       console.log('--->',this.staticLang)
@@ -159,13 +150,12 @@ class App extends Component {
       renderer: L.canvas(),
       layers: [circleLayer,gridLayer]
     }
-    this.map = L.map('map',mapOption).setView([37.92388861359015,115.22048950195312], 16);
-    L.tileLayer('https://api.mapbox.com/styles/v1/zhaozhuodev/cj6x6z0799sbk2so4ggx2rqhb/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoiemhhb3podW9kZXYiLCJhIjoiY2o2d3g2NWI3MWtndzJ3cGRrbWc1MjQ4diJ9.SCM25AWgFuLBKdqSi3XFag', {
-      maxZoom: 18,
-      attribution: '&copy; <a href="http://github.com/zhaozhuoboy">zhaozhuodev</a>',
-      id: 'mapbox.streets'
-    }).addTo(this.map);
     
+    this.map = L.map('map',mapOption).setView([37.92388861359015,115.22048950195312], 16);
+    L.tileLayer('//webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+      subdomains: "1234",
+      attribution: '高德地图'
+    }).addTo(this.map);
     var drawnItems = new L.FeatureGroup();
     // this.map.addLayer(drawnItems);
     var drawControl = new L.Control.Draw({

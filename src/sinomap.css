@@ -1,0 +1,27 @@
+.wrap{
+    height: 100%;
+}
+
+.top{
+    height: 40px;
+    width:100%;
+    background:red;
+}
+.bottom{
+    height: calc(100% - 40px);
+    width:100%;
+    background:#ccc;
+    overflow-y: auto;
+    
+   
+}
+.box{
+    height: calc(100vh - 40px);
+    width:100%;
+}
+.red-box{
+    background: blue;
+}
+.white{
+    background:#fff;
+}
