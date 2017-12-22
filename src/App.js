@@ -138,9 +138,11 @@ class App extends Component {
     };
   }
   initMap(){
-   
-    this.map = L.map('map').setView([37.92388861359015,115.22048950195312], 16);
-    L.tileLayer('//webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+    let mapOptions={
+      attributionControl:false
+    }
+    this.map = L.map('map',mapOptions).setView([37.92388861359015,115.22048950195312], 16);
+    L.tileLayer('http://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
       subdomains: "1234",
       attribution: '高德地图'
     }).addTo(this.map);
