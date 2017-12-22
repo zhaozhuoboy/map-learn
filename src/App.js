@@ -7,16 +7,10 @@ import './App.css';
 // import mkshadow from './images/shadow.png'
 
 
-let gridLayer = new L.layerGroup();
-let circleLayer = new L.layerGroup();
 class App extends Component {
   constructor(){
     super()
     this.map=null;
-    this.prevlatlng=null;
-    this.staticLang=null;
-    this.DrawPolygon=false;
-    this.areaSelect=null;
   }
  
   componentDidMount(){
@@ -145,28 +139,25 @@ class App extends Component {
   }
   initMap(){
    
-    const mapOption ={
-      renderer: L.canvas(),
-      layers: [circleLayer,gridLayer]
-    }
-    
-    this.map = L.map('map',mapOption).setView([37.92388861359015,115.22048950195312], 16);
+    this.map = L.map('map').setView([37.92388861359015,115.22048950195312], 16);
     L.tileLayer('//webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
       subdomains: "1234",
       attribution: '高德地图'
     }).addTo(this.map);
 
-    var drawnItems = new L.FeatureGroup();
-    this.map.addLayer(drawnItems);
-    var drawControl = new L.Control.Draw({
-      draw: {
-        position: 'topleft'
-      },
-      edit: {
-        featureGroup: drawnItems
-      }
-    });
-    this.map.addControl(drawControl);
+
+    //工具条
+    // var drawnItems = new L.FeatureGroup();
+    // this.map.addLayer(drawnItems);
+    // var drawControl = new L.Control.Draw({
+    //   draw: {
+    //     position: 'topleft'
+    //   },
+    //   edit: {
+    //     featureGroup: drawnItems
+    //   }
+    // });
+    // this.map.addControl(drawControl);
     
   }
   // //测量
@@ -187,9 +178,6 @@ class App extends Component {
 		<div>
 				<div className="App" id='map'>
 				</div>
-        {/* <button style={{ position: 'absolute', bottom: 10 }}onClick={this.measure}>
-          画区域
-				</button> */}
 		</div>
 		);
 	}
@@ -197,18 +185,5 @@ class App extends Component {
 
 export default App;
 
-
-// function returnGrid(a,b){
-//   let a1 = Number(a.split(' ')[1]);
-//   let b1 = Number(a.split(' ')[0]);
-//   let a2 = Number(b.split(' ')[1]);
-//   let b2 = Number(b.split(' ')[0]);
-//   let one =[a1,b1];
-//   let two =[a1,b2];
-//   let three = [a2,b2];
-//   let four = [a2,b1];
-//   let five =[a1,b1];
-//   return [one,two,three,four,five];
-// }
 
 
